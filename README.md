@@ -1,81 +1,123 @@
-# SmartSeason Field Monitoring System
+# SmartSeason – Field Monitoring System
 
-A full-stack, operational field workflow platform designed to track crop progression across various lifecycle stages dynamically. The application is scaffolded safely as a unified Monorepo bridging a Vite-React UI securely to an Express API manipulating a persistent Supabase Postgres environment.
+A full-stack field workflow platform for tracking crop progression across lifecycle stages. Built as a monorepo with a Vite + React frontend and an Express + Supabase backend.
+
+**Live Demo:** https://smart-season-13w5.vercel.app
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, Vanilla CSS |
+| Backend | Node.js, Express |
+| Database | Supabase (PostgreSQL) |
+| Auth | JWT (via `jsonwebtoken`) |
+| Deployment | Vercel (frontend + serverless backend) |
 
 ---
 
 ## 🚀 Setup Instructions
 
-### 1. Prerequisites
-- **Node.js**: `v18+` (For global fetch support)
-- **Supabase**: A Free Tier project from [Supabase.com](https://supabase.com)
+### Prerequisites
+- Node.js `v18+`
+- A free [Supabase](https://supabase.com) project
 
-### 2. Database Initialization
-This project uses raw Postgres tables driven seamlessly via the Supabase Javascript Client SDK.
-1. Open your Supabase Dashboard.
-2. Navigate to the **SQL Editor** tab.
-3. Completely copy and paste the contents of `schema.sql` located inside the root of this repository.
-4. Click **Run**. This establishes your relational mapping out of the box and seamlessly injects your first Super Admin automatically!
+### 1. Database Setup
+1. Open your Supabase project dashboard
+2. Go to the **SQL Editor** tab
+3. Copy and paste the contents of `schema.sql` (located in the project root)
+4. Click **Run** — this creates all tables and inserts the default admin account
 
-### 3. Backend Setup
-1. Open your terminal natively to the Backend API:
-   ```bash
-   cd backend
-   npm install
-   ```
-2. Create a `.env` file directly under the `backend/` directory providing the following connections securely:
-   ```env
-   PORT=5000
-   JWT_SECRET="YOUR_CUSTOM_SECRET"
-   SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
-   SUPABASE_SERVICE_ROLE_KEY="eyJhbGci...YOUR_SERVICE_ROLE_KEY"
-   ```
-3. Boot the environment natively:
-   ```bash
-   npm run dev
-   ```
+### 2. Backend Setup
+```bash
+cd backend
+npm install
+```
 
-### 4. Frontend Setup
-1. In a separate terminal window, open the Frontend:
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. By default, it hits `http://localhost:5000/api`. If deploying remotely, utilize standard environment configuration:
-   ```bash
-   VITE_API_URL="https://YOUR_BACKEND_URL" 
-   ```
-3. Execute the browser payload natively:
-   ```bash
-   npm run dev
-   ```
+Create a `.env` file inside `backend/`:
+```env
+PORT=5000
+JWT_SECRET="your_jwt_secret"
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="your_service_role_key"
+```
 
-### 5. Accessing the System
-Navigate to `http://localhost:5173`. 
-The raw initialization parameters automatically construct a default Admin Account via the SQL queries you ran:
-* **Admin Email:** `admin@smartseason.com`
-* **Admin Password:** `admin123`
+Start the server:
+```bash
+npm run dev
+```
+
+### 3. Frontend Setup
+```bash
+cd frontend
+npm install
+```
+
+For local development, the frontend defaults to `http://localhost:5000/api`.
+
+For a custom backend URL, create a `.env` file inside `frontend/`:
+```env
+VITE_API_URL=https://your-backend-url/api
+```
+
+Start the dev server:
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser.
+
+---
+
+## 🔑 Demo Credentials
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@smartseason.com | admin123 |
+
+> New user registrations require admin approval before login is permitted.
 
 ---
 
 ## 🏗️ Design Decisions
 
-1. **Architecture & Persistence (Supabase + API Bridging)**
-   To resolve the notoriously disruptive local compilation constraints of engines like Prisma on Windows devices safely, the entire backend routes solely process directly via `@supabase/supabase-js` mapping `.select()` and `.insert()` requests. This maintains a decoupled backend purely constructed within Javascript flawlessly compatible out-of-the-box natively with Vercel's volatile serverless cycles constraints.
+### 1. Supabase over Prisma
+Prisma requires native binary compilation which causes issues on Windows and in serverless environments like Vercel. Using the `@supabase/supabase-js` SDK directly avoids this entirely and works reliably across all environments.
 
-2. **Stage Progression & Verification Workflows**
-   Rather than allowing field agents to blindly modify the native fields securely, Stage Progression natively initiates a **"Proof" Request pipeline** alongside Observation Notes and Base64 File Image Encoding. Agents submit progress, shifting the request immediately to the Admin's "Stage Requests" tab dynamically to ensure verification protocols strictly remain intact.
+### 2. Stage Progression Requires Admin Approval
+Field agents cannot directly change a field's stage. Instead, they submit a "Stage Request" with observation notes and an optional Base64-encoded image. The admin reviews and approves or rejects the request from a dedicated tab. This enforces accountability and prevents unauthorized progression.
 
-3. **Status Automation Engine (`Computed Status`)**
-   We removed manual status properties natively out of the core data modeling inside Postgres entirely. Instead, Field structures autonomously classify their global Risk tolerance (`Active`, `At Risk`, `Completed`) dynamically upon fetched queries relying upon automated conditions (e.g. being inside the 'Planted' stage longer than 14 days, or encountering specific warning strings injected inside observational notes).
+### 3. Computed Field Status (No Manual Status Field)
+Field status (`Active`, `At Risk`, `Completed`) is not stored in the database. It is computed dynamically at query time based on rules — for example, a field stuck in the `Planted` stage for more than 14 days is flagged as `At Risk`. This removes the risk of stale or inconsistent status data.
 
-4. **Multi-Agent Capabilities & Visual Flow**
-   Fields map assignment capabilities to standard PostgreSQL `INTEGER[]` structures securely allocating multi-agent deployments effortlessly to fields. To improve readability, dense HTML Tables have been entirely shifted into a scalable Trello-Style Card Grid user-interface powered entirely by modern Flexbox rendering standards natively utilizing vanilla CSS parameters.
+### 4. Multi-Agent Field Assignment
+Fields support multiple assigned agents via a PostgreSQL `INTEGER[]` column. This allows flexible team assignments without a separate join table.
+
+### 5. Card-Based UI over Tables
+Dense data tables were replaced with a Trello-style card grid layout using Flexbox. This improves readability especially when managing many fields simultaneously.
 
 ---
 
-## 🔒 Assumptions Made
+## 🔒 Assumptions
 
-1. **Agent Modification Boundaries:** It was assumed that standard assigned Field Agents strictly remain incapable of destructing basic operational field contexts (e.g., rewriting the Crop Type, or rewriting historical assignment constraints). Agents operate entirely via modifying operational statuses smoothly via Stage APIs and note insertions.
-2. **Account Validation Checks:** Built under the assumption that organizational stability matters, any user explicitly initiating a local account via Registration immediately enters into a disabled `PENDING` cache loop natively blocking token generations. Only a validated Super Admin is permitted to approve user tokens into `ACTIVE` environments.
-3. **Deployment Hosting Targets:** Recognizing standard Monorepo hosting tendencies (Vercel Node Environments), the `vercel.json` bindings seamlessly deploy routing logic separating static distribution proxies alongside backend serverless functions transparently supporting public endpoints cleanly seamlessly out of the box.
+1. **Agent permissions are restricted** — Agents cannot modify core field data (crop type, historical assignments). They interact with fields only through stage requests and observation notes.
+2. **New registrations are pending by default** — Registered users cannot log in until an admin activates their account. This prevents unauthorized access in a multi-tenant environment.
+3. **Single admin account** — The system is initialized with one super admin via the SQL seed. Additional admins must be promoted manually via Supabase.
+
+---
+
+## 📁 Project Structure
+
+```
+SmartSeason/
+├── frontend/         # Vite + React app
+├── backend/          # Express API
+│   └── src/
+│       ├── routes/   # Auth, fields, users, notes, stageRequests
+│       ├── middleware/
+│       └── index.js
+├── schema.sql        # Database schema + seed data
+└── vercel.json       # Monorepo deployment config
+```
