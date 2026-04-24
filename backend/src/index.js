@@ -14,12 +14,11 @@ app.get('/', (req, res) => {
   res.send('SmartSeason API is running');
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/fields', require('./routes/fields'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/fields', require('./routes/notes'));
-app.use('/api/stageRequests', require('./routes/stageRequests'));
+app.use('/auth', require('./routes/auth'));
+app.use('/fields', require('./routes/fields'));
+app.use('/users', require('./routes/users'));
+app.use('/fields', require('./routes/notes'));
+app.use('/stageRequests', require('./routes/stageRequests'));
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
