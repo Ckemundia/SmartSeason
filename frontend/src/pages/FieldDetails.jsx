@@ -138,7 +138,7 @@ export default function FieldDetails() {
                 )}
               </span>
             )) : 'None'}
-          </div>>
+          </div>
         </div>
         <div className="card" style={{ gridColumn: 'span 2' }}>
           <h4>Stage Progression</h4>
